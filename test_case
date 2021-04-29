@@ -1,0 +1,100 @@
+#∀r.∀s.A ⊓ ∃r.∀s.B ⊓ ∀r.∃s.C ⊑ ∃r.∃s.( A ⊓ B ⊓C)
+    TBox={}
+    ABox=[NotEqualDic()]
+
+    rc1 = Role_Concept(quntify='forAll', role=Role('r'),
+                       concept=Role_Concept(quntify='forAll', role=Role('s'), concept=Concept('A')))
+
+    rc2 = Role_Concept(quntify='exist', role=Role('r'),
+                       concept=Role_Concept(quntify='forAll', role=Role('s'), concept=Concept('B')))
+
+    rc3 = Role_Concept(quntify='forAll', role=Role('r'),
+                       concept=Role_Concept(quntify='exist', role=Role('s'), concept=Concept('C')))
+
+    op1 = Operation('and', left=rc1, right=rc2)
+
+    op2 = Operation('and', left=op1, right=rc3)
+
+    c1 = Concept('A')
+    c2 = Concept('B')
+    c3 = Concept('C')
+
+    op3 = Operation('and', left=c1, right=c2)
+    op4 = Operation('and', left=op3, right=c3)
+
+    rc4 = Role_Concept(quntify='exist', role=Role('r'),
+                       concept=Role_Concept(quntify='exist', role=Role('s'), concept=op4))
+
+    op_containsTo = Operation('containsTo', left=op2, right=rc4)
+    op_containsTo.individual='a'
+    ABox.append(op_containsTo)
+#################################################################
+    #∀r.∀s.A ⊓ (∃r.∀s.¬A ⊔ ∀r.∃s.B) ⊑ ∀r.∃s.(A ⊓ B) ⊔ ∃r.∀s.¬B
+    TBox = {}
+    ABox = [NotEqualDic()]
+
+    rc1 = Role_Concept(quntify='forAll', role=Role('r'),
+                      concept=Role_Concept(quntify='forAll', role=Role('s'), concept=Concept('A')))
+
+    rc2 = Role_Concept(quntify='exist', role=Role('r'),
+                      concept=Role_Concept(quntify='forAll', role=Role('s'), concept=Concept('A',negation=True)))
+
+    rc3 = Role_Concept(quntify='forAll', role=Role('r'),
+                      concept=Role_Concept(quntify='exist', role=Role('s'), concept=Concept('B')))
+
+    op1 = Operation('or' , left=rc2, right=rc3)
+
+    op2 = Operation('and', left=rc1, right=op1)
+
+    c1 = Concept('A')
+    c2 = Concept('B')
+    op3 = Operation('and', left=c1, right=c2)
+
+    rc4 = Role_Concept(quntify='forAll', role=Role('r'),
+                       concept=Role_Concept(quntify='exist', role=Role('s'), concept=op3))
+
+    rc5 = Role_Concept(quntify='exist', role=Role('r'),
+                      concept=Role_Concept(quntify='forAll', role=Role('s'), concept=Concept('B',negation=True)))
+
+    op4 = Operation('or',rc4,rc5)
+
+    op_containsTo = Operation('containsTo', left=op2, right=op4)
+    op_containsTo.individual = 'a'
+    ABox.append(op_containsTo)
+
+###############################################
+    #r(a,b),r(b,d),r(d,c),r(a,c),r(c,d),A(d), ∃r.((A⊓∃r.A)⊔ (-A⊓∃r.∃r.-A ))
+    TBox = {}
+    ABox = [NotEqualDic()]
+    r1 = Role('r', 'a', 'b')
+    r2 = Role('r', 'b', 'd')
+    r3 = Role('r', 'd', 'c')
+    r4 = Role('r', 'a', 'c')
+    r5 = Role('r', 'c', 'd')
+    C1 = Concept('A','d')
+
+    rc1 = Role_Concept(quntify='exist', role = Role('r'), concept=Concept('A'))
+    rc2 = Role_Concept(quntify='exist', role = Role('r'), concept=Role_Concept(quntify='exist', role = Role('r'), concept=Concept('A',negation=True)))
+
+    op_and1 = Operation('and',Concept('A'),rc1)
+    op_and2 = Operation('and', Concept('A',negation=True), rc2)
+    op_or1  = Operation('or',op_and1,op_and2)
+    rc3 = Role_Concept(quntify='exist', role=Role('r'), concept=op_or1,individual='a')
+
+    ABox.extend([r1,r2,r3,r4,r5,C1])
+
+    print(satisfiction(TBox,ABox,rc3))
+
+
+################################################
+# TBox = {ParentWithMax2Children ≡≤ 2HasChild.⊤};   ABox : HasChild(joe, ann) - HasChild(joe, eva) - HasChild(joe, mary) - ParentWithMax2Children(joe)
+    TBox = {Concept('ParentWithMax2Children'):Role_Concept(number=2, quntify='less',role=Role('HasChild'),concept=Concept('top'))}
+    ABox = [NotEqualDic()]
+    r1 = Role('HasChild', 'joe', 'eva')
+    r2 = Role('HasChild', 'joe', 'mary')
+    r3 = Role('HasChild', 'joe', 'ann')
+    C1 = Concept('ParentWithMax2Children','joe')
+    ABox.extend([r1,r2,r3,C1])
+    print(consistent(TBox,ABox))
+
+##################################################

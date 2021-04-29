@@ -19,7 +19,7 @@ for i in range(65, 91):
     CONCEPTS.append(str(chr(i)))  # uppercase letters
 
 class Node:
-    def __init__(self, name=' '):
+    def __init__(self, name=''):
         self.name = name
         self.negation=False
         self.left = None
@@ -27,9 +27,12 @@ class Node:
         self.individual=''
 
 class Concept(Node):
-    def __init__(self,  name=' ', a=' '):
+    def __init__(self,  name='', a='', negation = False):
         super().__init__(name)
         self.individual = a
+        self.negation = negation
+    def signatureEquals(self,obj):
+        return type(obj) == Concept and self.name == obj.name
 
     def equals(self, obj):
         return type(obj)== Concept and self.name==obj.name and self.individual ==obj.individual
@@ -50,13 +53,19 @@ class Concept(Node):
 
         str_+=self.name+'('+self.individual+') '
         return str_
+    def totalEquals(self, obj):
+        return self.equals(obj) and self.negation ==obj.negation
 
 
 class Role(Node):
-    def __init__(self, name=' ', a=' ', b=' '):
+    def __init__(self, name='', a='', b=''):
         super().__init__(name)
         self.individual_pre = a
         self.individual_post= b
+
+    def signatureEquals(self, obj):
+        return type(
+            obj) == Role and self.name == obj.name
 
     def equals(self, obj):
         return type(obj)== Role and self.name==obj.name and self.individual_pre ==obj.individual_pre and self.individual_post == obj.individual_post
@@ -75,79 +84,57 @@ class Role(Node):
         str_ = ''
         str_+=self.name+'('+self.individual_pre+','+self.individual_post+') '
         return str_
-
-# class Sentence(Node):
-#     def __init__(self):
-#         super().__init__()
-#         self.body = []
-#         self.operations = []
-#         self.individual = ' '
-#
-#     def copy(self):
-#         temp = Sentence()
-#         for i in self.body:
-#             temp.body.append(i.copy())
-#
-#         for i in self.operations:
-#             temp.operations.append(i)
-#         temp.individual = self.individual
-#         return temp
-#     def __str__(self):
-#         str_=''
-#         for i in range(len(self.operations)):
-#             str_+=str(self.body[i])+' '+self.operations[i]+' '
-#         str_+=str(self.body[-1])
-#         str_ = str_+'('+str(self.individual)+') '
-#         return str_
-#     def equals(self, obj):
-#         if not type(obj)== Sentence:
-#             return False
-#         flag = True
-#         if len(obj.body)!=len(self.body):
-#             return False
-#         else:
-#             for i in range(len(obj.operations)):
-#                 flag = flag and obj.operations[i]==(self.operations[i]) and(obj.body[i].equals(self.body[i]))
-#         flag = flag and obj.body[-1].equals(self.body[-1])
-#         return   flag
+    def totalEquals(self, obj):
+        return self.equals(obj) and self.negation ==obj.negation
 
 
 class Role_Concept(Node):
-    def __init__(self, a, quntify,role=None, concept = None ):
+    def __init__(self, individual='', quntify='', role=None, concept = None,negation=False, number=0):
         super().__init__()
         self.quntify = quntify#exist or forAll
         self.role = role
         self.concept = concept # can be Concept or Role_Concept
-        self.individual = a
-        self.number = 0
+        self.individual = individual
+        self.number = number
+        self.negation = negation
 
+
+    def signatureEquals(self, obj):
+        return type(obj)== Role_Concept and self.concept.signatureEquals(obj.concept)  and self.role.signatureEquals(obj.role) and self.quntify ==obj.quntify and self.number == obj.number
 
     def equals(self, obj):
-        return type(obj)== Role_Concept and self.concept.equals(obj.concept) and self.individual == obj.individual and self.role.equals(obj.role) and self.quntify ==obj.quntify
+        return type(obj)== Role_Concept and self.concept.equals(obj.concept) and self.individual == obj.individual and self.role.equals(obj.role) and self.quntify ==obj.quntify and self.number == obj.number
+
+    def totalEquals(self, obj):
+        return type(obj)== Role_Concept and self.concept.totalEquals(obj.concept) and self.individual == obj.individual and self.role.totalEquals(obj.role) and self.quntify ==obj.quntify and self.number == obj.number
 
     def equalsButNegationOppsite(self, obj):
         return self.equals(obj) and (self.negation == (not obj.negation))
 
     def copy(self):
-        temp = Role_Concept(None, None)
+        temp = Role_Concept()
         temp.negation=self.negation
         temp.name = self.name
         temp.quntify = self.quntify
         temp.individual = self.individual
         temp.role = self.role.copy()
         temp.concept = self.concept.copy()
+        temp.number = self.number
         return temp
 
     def __str__(self):
-        str_ = self.quntify+'.'+self.role.name+' '+str(self.concept)+str(self.individual)+' '
+        str_ = self.quntify+str(self.number)+'.'+self.role.name+' '+str(self.concept)+str(self.individual)+' '
         return str_
 
 
 class Operation(Node):
-    def __init__(self,name):
+    def __init__(self,name,left=None, right=None, negation=False):
         super().__init__()
         self.individual = ''
         self.name = name
+        self.left = left
+        self.right = right
+        self.negation = negation
 
     def copy(self):
         temp = Operation(self.name)
@@ -158,24 +145,36 @@ class Operation(Node):
             temp.right=self.right.copy()
         return temp
 
+    def signatureEquals(self, obj):
+        if type(obj)==Operation:
+            if self.left != None and self.right != None and self.left != None and self.right != None:
+                return self.name==obj.name and self.left.signatureEquals(obj.left) and self.right.signatureEquals(obj.right)
+            else :
+                return self.name==obj.name
+        else:
+            return False
+
     def equals(self, obj):
         if type(obj)==Operation:
             if self.left != None and self.right != None and self.left != None and self.right != None:
-                return self.name==obj.name and self.left.equals(obj.left) and self.right.equals(obj.right)
+                return self.name==obj.name and self.left.equals(obj.left) and self.right.equals(obj.right) and self.individual==obj.individual
             else :
                 return self.name==obj.name
+        else:
+            return False
+    def totalEquals(self, obj):
+        if type(obj) == Operation:
+            if self.left != None and self.right != None and self.left != None and self.right != None:
+                return self.name == obj.name and self.left.totalEquals(obj.left) and self.right.totalEquals(
+                    obj.right) and self.individual == obj.individual
+            else:
+                return self.name == obj.name
         else:
             return False
 
     def __str__(self):
         return 'op_'+self.name+'('+str(self.left)+','+str(self.right)+')'+'['+self.individual+']'
 
-class QualifyNumber(Node):
-    def __init__(self,name, qualify):
-        super().__init__()
-        self.qualify =qualify
-        self.individual = ''
-        self.name = name
 
 
 class NotEqualDic(Node):
@@ -190,10 +189,15 @@ class NotEqualDic(Node):
         return temp
 
     def equals(self, obj):
-        pass
+        return False
+
+    def signatureEquals(self, obj):
+        return False
 
     def __str__(self):
         return str(self.dictionary)
+    def totalEquals(self, obj):
+        return self.equals(obj) and self.negation ==obj.negation
 
 
 

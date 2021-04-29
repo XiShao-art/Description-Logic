@@ -12,15 +12,66 @@ def getRandomIndividual():
 def ifContains(ABox, item):
     for ele in ABox:
         if type(ele) == type(item):
-
-            if ele.equals(item) and ele.negation==item.negation:
+            if ele.totalEquals(item) :
                 return True
     return False
+def negateOperation(op):
+    op = op.copy()
+    #op.negation=False
+    if op.left!=None and op.right!=None:
+        if not op.negation:
+            if op.name =='or':
+                op.name='and'
+                op.left = negate(op.left)
+                op.right = negate(op.right)
+            elif op.name =='and':
+                op.name = 'or'
+                op.left = negate(op.left)
+                op.right = negate(op.right)
 
-def negate( item):
-    v = item.copy()
-    v.negation = not item.negation
-    return v
+    else:
+        op.negation=False
+    return op
+
+def negate(item):
+    if type(item)==Concept:
+        item = item.copy()
+        item.negation = not item.negation
+        return item
+    elif type(item)==Operation:
+        item = item.copy()
+        if not item.negation:
+            item=negateOperation(item)
+        else:
+            item.negation = False
+        return item
+
+    elif type(item)==Role_Concept:
+        item = item.copy()
+        #如果本来就是negation可以抵消，但在NNF处理时对于当前要先取消negation
+        if not item.negation:
+            if item.quntify=='exist':
+                item.quntify ='forAll'
+
+                item.concept = negate(item.concept)
+            elif item.quntify=='forAll':
+                item.quntify ='exist'
+
+                item.concept = negate(item.concept)
+            elif item.quntify == 'less':
+                item.quntify = 'greater'
+                item.number +=1
+            elif item.quntify == 'greater':
+                item.quntify = 'less'
+                item.number -=1
+                #todo 等于0的时候
+
+
+        else:
+            item.negation = False
+        return item
+
+
 
 def ABox_printer(ABox):
     for i in ABox:
@@ -63,7 +114,7 @@ def testAllNotEqual(notEqualDic,individual_list):
 
 def backTrack(keys,individual_list:list, start,number,notEqualDic, flag):
     if len(individual_list)==number:
-       # print (testAllNotEqual(notEqualDic,individual_list), notEqualDic , individual_list)
+        #print (testAllNotEqual(notEqualDic,individual_list), notEqualDic , individual_list, number)
         flag = flag or testAllNotEqual(notEqualDic,individual_list)
     for i in range(start,len(keys)):
         individual_list.append(keys[i])
@@ -87,11 +138,17 @@ def generateNumberRoles(ABox, role_concept, individual):
             break
     individuals = []
     for i in range(role_concept.number):
-        individuals.append(getRandomIndividual())
+        cha =getRandomIndividual()
+        individuals.append(cha)
+        top = Concept('top', cha)
+        if not ifContains(ABox, top):
+            ABox.append(top)
 
     for i in range(role_concept.number):
         ABox.append(Role(role_concept.role.name,individual,individuals[i]))
-        ABox.append(Concept(role_concept.concept.name, individuals[i]))
+        temp_concept = role_concept.concept.copy()
+        temp_concept.individual = individuals[i]
+        ABox.append(temp_concept)
         notEqualDic.dictionary[individuals[i]]=[]
         for j in range(role_concept.number):
             if i!=j:
