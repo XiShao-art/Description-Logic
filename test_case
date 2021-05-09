@@ -1,6 +1,6 @@
-#∀r.∀s.A ⊓ ∃r.∀s.B ⊓ ∀r.∃s.C ⊑ ∃r.∃s.( A ⊓ B ⊓C)
-    TBox={}
-    ABox=[NotEqualDic()]
+# ∀r.∀s.A ⊓ ∃r.∀s.B ⊓ ∀r.∃s.C ⊑ ∃r.∃s.( A ⊓ B ⊓C)
+    TBox = {}
+    ABox = [NotEqualDic()]
 
     rc1 = Role_Concept(quntify='forAll', role=Role('r'),
                        concept=Role_Concept(quntify='forAll', role=Role('s'), concept=Concept('A')))
@@ -26,8 +26,8 @@
                        concept=Role_Concept(quntify='exist', role=Role('s'), concept=op4))
 
     op_containsTo = Operation('containsTo', left=op2, right=rc4)
-    op_containsTo.individual='a'
-    ABox.append(op_containsTo)
+
+    print(subsumptions(TBox, ABox, op_containsTo))
 #################################################################
     #∀r.∀s.A ⊓ (∃r.∀s.¬A ⊔ ∀r.∃s.B) ⊑ ∀r.∃s.(A ⊓ B) ⊔ ∃r.∀s.¬B
     TBox = {}
@@ -59,8 +59,9 @@
     op4 = Operation('or',rc4,rc5)
 
     op_containsTo = Operation('containsTo', left=op2, right=op4)
-    op_containsTo.individual = 'a'
-    ABox.append(op_containsTo)
+
+    print(subsumptions(TBox,ABox,op_containsTo))
+
 
 ###############################################
     #r(a,b),r(b,d),r(d,c),r(a,c),r(c,d),A(d), ∃r.((A⊓∃r.A)⊔ (-A⊓∃r.∃r.-A ))
@@ -83,7 +84,7 @@
 
     ABox.extend([r1,r2,r3,r4,r5,C1])
 
-    print(satisfiction(TBox,ABox,rc3))
+    print(instantiation(TBox,ABox,rc3))
 
 
 ################################################
@@ -97,4 +98,14 @@
     ABox.extend([r1,r2,r3,C1])
     print(consistent(TBox,ABox))
 
+
 ##################################################
+    # <=2has.child and  >=2has.Female  and >=1has.-Female
+    TBox = {}
+    ABox = [NotEqualDic()]
+    rc1 = Role_Concept(number=2, quntify='less', role=Role('has'), concept=Concept('child'))
+    rc2 = Role_Concept(number=2, quntify='greater', role=Role('has'), concept=Concept('Female'))
+    rc3 = Role_Concept(number=1, quntify='greater', role=Role('has'), concept=Concept('Female', negation=True))
+    op1 =Operation('and',rc1,rc2)
+    op2 = Operation('and', op1, rc3)
+    print(satisfication(TBox, ABox, op2))

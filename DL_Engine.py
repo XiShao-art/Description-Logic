@@ -1,22 +1,7 @@
-
-OPERATIONS = ['and', 'or', 'implies']
-QUANTIFIES = ['exist', 'forAll']
 INDIVIDUALS = []
-CONCEPTS = []
-#FUNCTIONS = []
-ROLES = []
-
-for i in range(97, 109):
-    ROLES.append(str(chr(i)))  # lowercase letters m to z
-
-for i in range(109, 123):
+for i in range(97, 123):
     INDIVIDUALS.append(str(chr(i)))  # lowercase letters a to l
 
-# for i in range(65, 77):
-#     FUNCTIONS.append(str(chr(i)))  # uppercase letters
-
-for i in range(65, 91):
-    CONCEPTS.append(str(chr(i)))  # uppercase letters
 
 class Node:
     def __init__(self, name=''):
@@ -27,9 +12,9 @@ class Node:
         self.individual=''
 
 class Concept(Node):
-    def __init__(self,  name='', a='', negation = False):
+    def __init__(self, name='', individual='', negation = False):
         super().__init__(name)
-        self.individual = a
+        self.individual = individual
         self.negation = negation
     def signatureEquals(self,obj):
         return type(obj) == Concept and self.name == obj.name
@@ -58,10 +43,10 @@ class Concept(Node):
 
 
 class Role(Node):
-    def __init__(self, name='', a='', b=''):
+    def __init__(self, name='', individual_pre='', individual_post=''):
         super().__init__(name)
-        self.individual_pre = a
-        self.individual_post= b
+        self.individual_pre = individual_pre
+        self.individual_post= individual_post
 
     def signatureEquals(self, obj):
         return type(

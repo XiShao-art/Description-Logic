@@ -22,12 +22,7 @@ def subsumptions(TBox, ABox, subsumpt):
             top = Concept('top',item.individual)
             if not ifContains(ABox, top):
                 ABox.append(top)
-
-
-
-    #ABox_printer(ABox)
-    ABox = preprocess(TBox, ABox)
-    return not Tableau(ABox)
+    return not consistent(TBox, ABox)
 
 def consistent(TBox, ABox):
     ABox = preprocess(TBox, ABox)
@@ -42,15 +37,11 @@ def satisfication(TBox, ABox, satisfy):
             top = Concept('top', item.individual)
             if not ifContains(ABox, top):
                 ABox.append(top)
-
-    # ABox_printer(ABox)
-    ABox = preprocess(TBox, ABox)
-    return Tableau(ABox)
+    return consistent(TBox, ABox)
 
 def instantiation(TBox, ABox, satisfy):
     satisfy.negation=True
     ABox.append(satisfy)
-   # ABox_printer(ABox)
     for item in ABox:
         if type(item) == Operation:
             RemoveContains(item)
@@ -61,8 +52,6 @@ def instantiation(TBox, ABox, satisfy):
             if not ifContains(ABox, top):
                 ABox.append(top)
 
-    # ABox_printer(ABox)
-    ABox = preprocess(TBox, ABox)
-    return Tableau(ABox)
+    return not consistent(TBox, ABox)
 
 

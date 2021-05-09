@@ -7,105 +7,106 @@ def ifComplete(ABox, thre):
         return True
     for index in range(len(ABox)):
         # 第一二种情况
-        if type(ABox[index]) is Operation:
+        for index in range(len(ABox)):
+            # 第一二种情况
+            if type(ABox[index]) is Operation:
+                # 第一种情况
+                if ABox[index].name == 'and':
+                    temp_senetnce = ABox[index].left.copy()
+                    temp_senetnce.individual = ABox[index].individual
+                    temp_top = ABox[index].right.copy()
+                    temp_top.individual = ABox[index].individual
+                    ifchange = False
+                    if not ifContains(ABox, temp_senetnce):
 
-            if ABox[index].name == 'and':
-                temp_senetnce = ABox[index].left.copy()
-                temp_senetnce.individual = ABox[index].individual
-                temp_top = ABox[index].right.copy()
-                temp_top.individual = ABox[index].individual
+                        ifchange = True
+                    if not ifContains(ABox, temp_top):
 
-                ifchange = False
-                if not ifContains(ABox, temp_senetnce):
+                        ifchange = True
+                    if ifchange:
+                        return False
 
-                    ifchange = True
-                if not ifContains(ABox, temp_top):
-
-                    ifchange = True
-                if ifchange:
-                    return False
-            # 第二种情况
-            elif ABox[index].name == 'or':
-                temp_senetnce = ABox[index].left.copy()
-                temp_senetnce.individual = ABox[index].individual
-                temp_top = ABox[index].right.copy()
-                temp_top.individual = ABox[index].individual
-
-
-
-                # print( ( ifContains(ABox,temp_senetnce)) , ( ifContains(ABox,temp_top)))
-                if (not ifContains(ABox, temp_senetnce)) and (not ifContains(ABox, temp_top)):
-                    return False
+                # 第二种情况
+                elif ABox[index].name == 'or':
+                    temp_senetnce = ABox[index].left.copy()
+                    temp_senetnce.individual = ABox[index].individual
+                    temp_top = ABox[index].right.copy()
+                    temp_top.individual = ABox[index].individual
+                    if (not ifContains(ABox, temp_senetnce)) and (not ifContains(ABox, temp_top)):
+                        return False
 
 
-            # 0个 有问题
-            else:
-                print('sentence len zero error')
-                exit(1)
+                # 0个 有问题
+                else:
+                    print('sentence len zero error')
+                    exit(1)
 
 
-        # 第三种情况
-        elif type(ABox[index]) is Role_Concept:
-            if ABox[index].quntify == 'exist' and noExistOtherPair(ABox, ABox[index]):
-                return False
+            # 第三种情况
+            elif type(ABox[index]) is Role_Concept:
 
-            # 第四种情况
-            elif ABox[index].quntify == 'forAll':
+                # 第四种情况
+                if ABox[index].quntify == 'forAll':
+                    for index_2 in range(len(ABox)):
+                        if type(ABox[index_2]) is Role:
+                            # 存在forAll a 和 role(a, x)
 
-                for index_2 in range(len(ABox)):
-                    if type(ABox[index_2]) is Role:
-                        # 存在forAll a 和 role(a, x)
+                            role = ABox[index_2]
+                            temp_concept = ABox[index].concept.copy()
+                            temp_concept.individual = role.individual_post
+                            if role.individual_pre == ABox[index].individual and role.name == ABox[
+                                index].role.name and not ifContains(ABox, temp_concept):
+                                return False
 
-                        role = ABox[index_2]
-                        temp_concept = ABox[index].concept.copy()
-                        temp_concept.individual = role.individual_post
-                        # print(str(temp_concept),' temp_concept')
-                        if role.individual_pre == ABox[index].individual and role.name == ABox[
-                            index].role.name and not ifContains(ABox, temp_concept):
+                elif ABox[index].quntify == 'less':
 
-                            #print(temp_concept,'complete')
+                    # 如果有r(a,b) 但没有C(b) 或-C(b),就加
+                    for item in ABox:
+                        if type(item) == Role and item.name == ABox[index].role.name and item.individual_pre == ABox[
+                            index].individual:
+                            t1 = ABox[index].concept.copy()
+                            t1.individual = item.individual_post
+                            t2 = ABox[index].concept.copy()
+                            t2.negation = not t1.negation
+                            t2.individual = item.individual_post
+                            if (not ifContains(ABox, t1)) and (not ifContains(ABox, t2)):
+                                return False
+
+                    dicOfRoleConecpt = getDicOfRoleConecpt(ABox, ABox[index].individual, ABox[index].role,
+                                                           ABox[index].concept)
+                    notEqualDic = None
+                    for item in ABox:
+                        if type(item) == NotEqualDic:
+                            notEqualDic = item
+                            break
+
+                    # ABox contains n+1 pair
+                    if len(dicOfRoleConecpt.keys()) >= ABox[index].number + 1:
+                        if len(notEqualDic.dictionary) == 0:
                             return False
-            elif ABox[index].quntify == 'greater':
-                dicOfRoleConecpt = getDicOfRoleConecpt(ABox, ABox[index].individual, ABox[index].role,
-                                                       ABox[index].concept)
+                        else:
+                            # 如果存在不相等 但是没有
+                            if not satisfy_number(ABox[index].number + 1, dicOfRoleConecpt, notEqualDic):
+                                keys = list(dicOfRoleConecpt.keys())
+                                for i in range(len(keys) - 1):
+                                    for j in range(i + 1, len(keys)):
+                                        if keys[j] not in notEqualDic.dictionary.keys() or keys[i] not in \
+                                                notEqualDic.dictionary[keys[j]]:
+                                            return False
 
-                notEqualDic = None
-                for item in ABox:
-                    if type(item) == NotEqualDic:
-                        notEqualDic = item
-                        break
-                if notEqualDic == None or not satisfy_number(ABox[index].number, dicOfRoleConecpt, notEqualDic):
+                elif ABox[index].quntify == 'exist' and noExistOtherPair(ABox, ABox[index]):
                     return False
+                # 大于等于
+                elif ABox[index].quntify == 'greater':
+                    dicOfRoleConecpt = getDicOfRoleConecpt(ABox, ABox[index].individual, ABox[index].role,
+                                                           ABox[index].concept)
 
-            elif ABox[index].quntify == 'less':
-                for item in ABox:
-                    if type(item) == Role and item.name == ABox[index].role.name and item.individual_pre == ABox[
-                        index].individual:
-                        t1 = ABox[index].concept.copy()
-                        t1.individual = item.individual_post
-                        t2 = ABox[index].concept.copy()
-                        t2.negation = not t1.negation
-                        t2.individual = item.individual_post
-                        # ABox_printer(ABox)
-                        # print(t1,"?????")
-                        if (not ifContains(ABox, t1)) and (not ifContains(ABox, t2)):
-                            return False
-                dicOfRoleConecpt = getDicOfRoleConecpt(ABox, ABox[index].individual, ABox[index].role,
-                                                       ABox[index].concept)
-                notEqualDic = None
-                for item in ABox:
-                    if type(item) == NotEqualDic:
-                        notEqualDic = item
-                        break
-
-                # ABox contains n+1 pair
-                if len(dicOfRoleConecpt.keys()) >= ABox[index].number + 1:
-                    # if len(notEqualDic.dictionary) == 0:
-                    #     return False
-                    # else:
-                        # 如果存在不相等 但是没有
-
-                    if not satisfy_number(ABox[index].number + 1, dicOfRoleConecpt, notEqualDic):
+                    notEqualDic = None
+                    for item in ABox:
+                        if type(item) == NotEqualDic:
+                            notEqualDic = item
+                            break
+                    if notEqualDic == None or not satisfy_number(ABox[index].number, dicOfRoleConecpt, notEqualDic):
                         return False
     return True
 
@@ -129,7 +130,6 @@ def ifOpen(ABox, thre):
 
                 dicOfRoleConecpt = getDicOfRoleConecpt(ABox, item.individual, item.role,
                                                        item.concept)
-                #print( satisfy_number(item.number + 1, dicOfRoleConecpt, notEqualDic))
                 if  satisfy_number(item.number + 1, dicOfRoleConecpt, notEqualDic) or item.number<0:
                     return False
             if type(item)==Concept and item.name=='top' and item.negation:
@@ -151,13 +151,7 @@ def ifOpen(ABox, thre):
 
 
 def Tableau(ABox,  flag=False,thre=100):
-   # ABox_printer(ABox)
     if ifComplete(ABox, thre):
-        # ABox_printer(ABox)
-        # print(ifOpen(ABox, thre))
-        # print('******************')
-
-
         return flag or ifOpen(ABox, thre)
     else:
         for index in range(len(ABox)):
@@ -185,10 +179,6 @@ def Tableau(ABox,  flag=False,thre=100):
                     temp_senetnce.individual = ABox[index].individual
                     temp_top = ABox[index].right.copy()
                     temp_top.individual = ABox[index].individual
-
-                    #print( ( ifContains(ABox,temp_senetnce)) , ( ifContains(ABox,temp_top)))
-
-                  #  print( temp_top,ifContains(ABox,temp_top))
                     if (not ifContains(ABox,temp_senetnce)) and (not ifContains(ABox,temp_top)):
                         ABox2 = ABox_copy(ABox)
                         ABox.append(temp_senetnce)
@@ -221,11 +211,8 @@ def Tableau(ABox,  flag=False,thre=100):
                             a=role.individual_pre == ABox[index].individual
                             b=role.name == ABox[index].role.name
                             c=not ifContains(ABox, temp_concept)
-
-                            #print(str(temp_concept),' temp_concept')
                             if role.individual_pre == ABox[index].individual and role.name == ABox[index].role.name and not ifContains(ABox, temp_concept):
 
-                                #print(1)
                                 ABox.append(temp_concept)
 
                                 flag = flag or Tableau(ABox, flag)
@@ -242,11 +229,9 @@ def Tableau(ABox,  flag=False,thre=100):
                             t2 = ABox[index].concept.copy()
                             t2.negation = not t1.negation
                             t2.individual = item.individual_post
-                            # ABox_printer(ABox)
-                            # print(t1,"?????")
                             if (not ifContains(ABox,t1)) and (not ifContains(ABox,t2)):
-                                print('??????????????')
-                                ABox2 = ABox.copy()
+
+                                ABox2 = ABox_copy(ABox)
                                 ABox2.append(t2)
                                 ABox.append(t1)
 
@@ -267,11 +252,12 @@ def Tableau(ABox,  flag=False,thre=100):
                             keys = list(dicOfRoleConecpt.keys())
                             for i in range(len(keys)-1):
                                 for j in range(i+1,len(keys)):
-                                    ABox2 = ABox.copy()
+                                    ABox2 = ABox_copy(ABox)
                                     ABox = changeIndividual(ABox,keys[i],keys[j])
                                     ABox2 = changeIndividual(ABox2, keys[j],keys[i])
 
                                     flag = flag or Tableau(ABox, flag) or Tableau(ABox2, flag)
+                                    break
                         else:
                             #如果存在不相等 但是没有
                             if not satisfy_number( ABox[index].number+1, dicOfRoleConecpt, notEqualDic):
@@ -279,14 +265,12 @@ def Tableau(ABox,  flag=False,thre=100):
                                 for i in range(len(keys) - 1):
                                     for j in range(i+1, len(keys)):
                                         if keys[j] not in notEqualDic.dictionary.keys() or keys[i] not in notEqualDic.dictionary[keys[j]]:
-                                           # print(keys[i],keys[j])
                                             ABox2 = ABox_copy(ABox)
                                             ABox = changeIndividual(ABox, keys[i], keys[j])
                                             ABox2 = changeIndividual(ABox2,  keys[j],keys[i])
-                                            # ABox_printer(ABox)
-                                            # ABox_printer(ABox2)
 
                                             flag = flag or Tableau(ABox, flag) or Tableau(ABox2, flag)
+                                            break
 
                 elif ABox[index].quntify == 'exist' and noExistOtherPair(ABox, ABox[index]):
                     individual = getRandomIndividual()

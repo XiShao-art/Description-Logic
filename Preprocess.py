@@ -84,7 +84,7 @@ def expension(TBox, ABox):
             if ABox[item].signatureEquals(key):
                 ifNegation = ABox[item].negation
                 temp_new = TBox[key].copy()
-                print(key, temp_new)
+                #print(key, temp_new)
                 temp_new.individual = ABox[item].individual
                 ABox[item]= temp_new
               #  ABox_printer(ABox)

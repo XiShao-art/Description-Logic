@@ -64,7 +64,6 @@ def negate(item):
             elif item.quntify == 'greater':
                 item.quntify = 'less'
                 item.number -=1
-                #todo 等于0的时候
 
 
         else:
@@ -98,6 +97,7 @@ def getDicOfRoleConecpt(ABox,individual,role_, concept_):
         if type(item)==Role and item.name == role_name and item.individual_pre==individual:
             post_individual=item.individual_post
             for concept_item in ABox:
+
                 if type(concept_item) == Concept and concept_item.name == concept_name and concept_item.individual == post_individual and (concept_.negation== concept_item.negation):
                     dictionary[post_individual] = []
                     dictionary[post_individual].append(item)
@@ -107,14 +107,12 @@ def getDicOfRoleConecpt(ABox,individual,role_, concept_):
 def testAllNotEqual(notEqualDic,individual_list):
     for i in range(len(individual_list)-1):
         for j in range(i+1,len(individual_list)):
-           # print(individual_list[i],notEqualDic[individual_list[j]])
             if individual_list[j]not in notEqualDic.dictionary.keys() or individual_list[i] not in notEqualDic.dictionary[individual_list[j]]:
                 return False
     return True
 
 def backTrack(keys,individual_list:list, start,number,notEqualDic, flag):
     if len(individual_list)==number:
-        #print (testAllNotEqual(notEqualDic,individual_list), notEqualDic , individual_list, number)
         flag = flag or testAllNotEqual(notEqualDic,individual_list)
     for i in range(start,len(keys)):
         individual_list.append(keys[i])
@@ -161,6 +159,29 @@ def generateNumberRoles(ABox, role_concept, individual):
 
 
 def changeIndividual(ABox,originIn,newIn):
+    notEqualDic = None
+    for item in ABox:
+        if type(item) == NotEqualDic:
+            notEqualDic = item
+            break
+
+    valuelist = []
+
+    for key in notEqualDic.dictionary.keys():
+        if key==originIn and newIn in notEqualDic.dictionary.keys():
+            valuelist = notEqualDic.dictionary[key]
+
+            notEqualDic.dictionary.pop(key)
+            break
+
+    for key in notEqualDic.dictionary.keys():
+        if key == newIn:
+            notEqualDic.dictionary[key].extend(valuelist)
+            break
+    for key in notEqualDic.dictionary.keys():
+        for i in range(len(notEqualDic.dictionary[key])):
+            if notEqualDic.dictionary[key][i]==originIn:
+                notEqualDic.dictionary[key][i]=newIn
     for item in ABox:
         if type(item)==Role:
             if item.individual_pre==originIn:
